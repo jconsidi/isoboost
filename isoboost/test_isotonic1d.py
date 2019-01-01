@@ -5,6 +5,22 @@ import unittest
 import isotonic1d
 
 class Isotonic1dTestCase(unittest.TestCase):
+    def check_generic(self, inputs, output):
+        # copy inputs and append regressed values
+        regressed = []
+        for input in inputs:
+            (x, v) = input[:2]
+            w = input[2] if len(input) > 2 else 1.0 # add weight if not specified
+            r = output(x) # add regressed value
+            regressed.append((x, v, w, r))
+
+        regressed.sort()
+        for i in range(len(regressed) - 1):
+            (x0, v0, w0, r0) = regressed[i]
+            (x1, v1, w1, r1) = regressed[i + 1]
+            with self.subTest(x0 = x0, x1 = x1):
+                self.assertLessEqual(r0, r1)
+
     def test_singleton(self):
         expected = 3.2349
 
@@ -18,6 +34,8 @@ class Isotonic1dTestCase(unittest.TestCase):
         self.assertEqual(output(1.0), expected)
         self.assertEqual(output(1.5), expected)
 
+        self.check_generic(inputs, output)
+
     def test_singleton_weighted(self):
         expected = 5.7268
 
@@ -30,6 +48,8 @@ class Isotonic1dTestCase(unittest.TestCase):
         self.assertEqual(output(0.5), expected)
         self.assertEqual(output(1.0), expected)
         self.assertEqual(output(1.5), expected)
+
+        self.check_generic(inputs, output)
 
     def test_sorted(self):
         inputs = []
@@ -51,6 +71,8 @@ class Isotonic1dTestCase(unittest.TestCase):
         self.assertEqual(output(3.5), 1.3)
         self.assertEqual(output(4.0), 1.4)
         self.assertEqual(output(4.5), 1.4)
+
+        self.check_generic(inputs, output)
 
 ############################################################
 # startup handling #########################################
