@@ -21,6 +21,17 @@ class Isotonic1dTestCase(unittest.TestCase):
             with self.subTest(x0 = x0, x1 = x1):
                 self.assertLessEqual(r0, r1)
 
+        level_sets = {}
+        for (x0, v0, w0, r0) in regressed:
+            level_sets.setdefault(r0, [0.0, 0.0])
+            level_sets[r0][0] += v0 * w0 # sum(value * weight)
+            level_sets[r0][1] += w0 # sum(weight)
+
+        for r in level_sets.keys():
+            with self.subTest(r = r):
+                # check level sets match their weighted average.
+                self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
+
     def test_singleton(self):
         expected = 3.2349
 
