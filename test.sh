@@ -4,4 +4,4 @@ set -e
 
 cd `dirname $0`
 
-./run.sh isoboost/test.sh $*
+./run.sh test/test.sh $*

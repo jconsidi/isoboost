@@ -8,7 +8,7 @@
 import itertools
 import math
 
-import rangemap
+from . import rangemap
 
 def _build_output_function(regressed):
     """

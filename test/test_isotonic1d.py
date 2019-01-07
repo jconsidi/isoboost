@@ -2,7 +2,7 @@
 
 import unittest
 
-import isotonic1d
+from isoboost import isotonic1d
 
 class Isotonic1dTestCase(unittest.TestCase):
     def check_generic(self, inputs, output):

@@ -2,7 +2,7 @@
 
 import unittest
 
-import isotonic2d
+from isoboost import isotonic2d
 
 class Isotonic2dBase(object):
     """
