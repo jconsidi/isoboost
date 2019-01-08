@@ -5,6 +5,7 @@
 # by Quentin F. Stout
 # in Algorithmica 66 (2013), pp. 93–112.
 
+import bisect
 import itertools
 import math
 
@@ -21,14 +22,28 @@ def _build_output_function(regressed):
 
     regressed_min = min(regressed.values())
 
-    def fit(x, y):
-        output = regressed_min # TODO make this an option
+    regressed_by_x = {}
+    for ((x, y), r) in regressed.items():
+        regressed_by_x.setdefault(x, []).append((y, r))
 
+    for (x, yrs) in regressed_by_x.items():
+        yrs.sort()
+
+    # switch to list of (x, [(y,r),...])
+    regressed_by_x = sorted(regressed_by_x.items())
+
+    def fit(x, y):
         # TODO make this run in O(log n) time.
-        for ((x0, y0), r0) in regressed.items():
-            if x0 <= x and y0 <= y:
-                # apply isotonic constraint
-                output = max(output, r0)
+        output = regressed_min # TODO make this an option
+        for (x0, yrs) in regressed_by_x:
+            if x0 > x:
+                break
+
+            if yrs[0][0] > y:
+                continue
+
+            y_index = bisect.bisect_right(yrs, (y, math.inf)) - 1
+            output = max(output, yrs[y_index][1])
 
         return output
 
