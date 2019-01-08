@@ -16,6 +16,9 @@ def _build_output_function(regressed):
     output to arbitrary points.
     """
 
+    if len(regressed) <= 0:
+        raise ValueError('no regressed values')
+
     regressed_min = min(regressed.values())
 
     def fit(x, y):
