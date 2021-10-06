@@ -25,4 +25,7 @@ RUN python3 -m compileall isoboost/*.py
 ADD setup.py $HOME
 RUN python3 setup.py install
 
+ADD scripts/*.py scripts/*.sh scripts/
 ADD test/*.py test/*.sh test/
+
+RUN python3 -m compileall scripts/*.py
