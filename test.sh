@@ -4,4 +4,4 @@ set -e
 
 cd `dirname $0`
 
-./run.sh test/test.sh $*
+./run.sh tests/test.sh $*

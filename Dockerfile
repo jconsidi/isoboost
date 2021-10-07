@@ -26,6 +26,6 @@ ADD setup.py $HOME
 RUN python3 setup.py install
 
 ADD scripts/*.py scripts/*.sh scripts/
-ADD test/*.py test/*.sh test/
+ADD tests/*.py tests/*.sh tests/
 
 RUN python3 -m compileall scripts/*.py
