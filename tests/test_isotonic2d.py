@@ -205,6 +205,30 @@ class Isotonic2dTestCase(Isotonic2dL2TestCase):
     def regress(self, *args, **kwargs):
         return isotonic2d.regress_isotonic_2d(*args, **kwargs)
 
+class Isotonic2dRegressionTestCase(unittest.TestCase):
+    """
+    Test isotonic2d.Isotonic2dRegression.
+    """
+
+    def check(self, X, y, output_expected):
+        model = isotonic2d.Isotonic2dRegression()
+        model.fit(X, y)
+
+        output = model.predict(X)
+        for i in range(len(output_expected)):
+            with self.subTest(i = i, X_i = X[i]):
+                self.assertAlmostEqual(output[i], output_expected[i])
+
+    def test_00_constant(self):
+        self.check([[0, 0]], [0], [0])
+        self.check([[0, 0], [1, 1]], [1, 1], [1, 1])
+
+    def test_01_sorted(self):
+        self.check([[0, 0], [1, 1]], [3, 5], [3, 5])
+
+    def test_01_unsorted(self):
+        self.check([[0, 0], [1, 1]], [2, 0], [1, 1])
+
 ############################################################
 # startup handling #########################################
 ############################################################

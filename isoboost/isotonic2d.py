@@ -9,6 +9,10 @@ import bisect
 import itertools
 import math
 
+from sklearn.base import RegressorMixin
+from sklearn.base import TransformerMixin
+from sklearn.utils import check_array
+
 from . import rangemap
 
 def _build_output_function(regressed):
@@ -304,3 +308,51 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
     partition(list(inputs))
 
     return _build_output_function(regressed)
+
+class Isotonic2dRegression(RegressorMixin, TransformerMixin):
+    """Isotonic 2d regression model.
+
+    Interface based on sklearn.isotonic.IsotonicRegression
+    https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/isotonic.py
+    """
+
+    def __init__(self):
+        self.f_ = None
+
+    def fit(self, X, y, sample_weight=None):
+        # TODO: shape checks
+        X = check_array(X)
+        y = check_array(y, ensure_2d=False)
+        self.f_ = regress_isotonic_2d_l2(xs=X[:,0], ys=X[:,1], vs=y, ws = sample_weight)
+
+    def predict(self, T):
+        """Predict new data by bilinear interpolation.
+
+        Parameters
+        ----------
+        T : array-like of shape (n_samples, 2)
+            Data to transform.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            Transformed data.
+        """
+        return self.transform(T)
+
+    def transform(self, T):
+        """Transform new data by bilinear interpolation.
+
+        Parameters
+        ----------
+        T : array-like of shape (n_samples, 2)
+            Data to transform.
+
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            Transformed data.
+        """
+
+        T = check_array(T)
+        return [self.f_(T[i,0], T[i,1]) for i in range(T.shape[0])]
