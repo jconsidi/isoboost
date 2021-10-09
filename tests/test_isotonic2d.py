@@ -6,84 +6,61 @@ from isoboost import isotonic2d
 
 class Isotonic2dBase(object):
     """
+    Shared test code for 2D isotonic regressions.
+    """
+
+    def check(self, training_data, test_data):
+        # validate isotonicity of test data
+
+        for (x0, y0, v0) in test_data:
+            for (x1, y1, v1) in test_data:
+                if x0 > x1 or y0 > y1:
+                    continue
+
+                with self.subTest(x0=x0, y0=y0, v0=v0, x1=x1, y1=y1, v1=v1):
+                    self.assertLessEqual(v0, v1)
+
+        # train prediction function
+
+        predict_func = self.fit(training_data)
+
+        # TODO: check level sets for training data
+
+        # check predictions for test data
+
+        for (x, y, v_expected) in test_data:
+            with self.subTest(x=x, y=y):
+                v_actual = predict_func(x, y)
+                self.assertAlmostEqual(v_actual, v_expected)
+
+    def check_isotonic(self, training_data):
+        training_data = tuple(training_data)
+        self.check(training_data, training_data)
+
+    def fit(self, training_data):
+        """Build model for training data and return function to predict a single point.
+        """
+        raise NotImplemented()
+
+class Isotonic2dLpBase(Isotonic2dBase):
+    """
     Shared test cases where the choice of Lp norm does not matter.
     """
 
-    def check(self, inputs, output):
-        # copy inputs and append regressed values
-        regressed = []
-        for input in inputs:
-            (x, y, v) = input[:3]
-            w = input[3] if len(input) > 3 else 1.0 # add weight if not specified
-            r = output(x, y) # add regressed value
-            regressed.append((x, y, v, w, r))
-
-        for (x0, y0, v0, w0, r0) in regressed:
-            for (x1, y1, v1, w1, r1) in regressed:
-                with self.subTest(x0 = x0, y0 = y0, x1 = x1, y1 = y1):
-                    # check isotonicity
-                    if x0 <= x1 and y0 <= y1:
-                        self.assertLessEqual(r0, r1)
-
-class Isotonic2dLpBase(Isotonic2dBase):
-    def test_singleton(self):
+    def test_00_singleton(self):
         expected = 4.0981
 
-        inputs = []
-        inputs.append((1.0, 1.0, expected))
+        self.check(training_data=[(1.0, 1.0, expected)],
+                   test_data=[(x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)])
 
-        (xs, ys, vs) = zip(*inputs)
-        output = self.regress(xs, ys, vs)
-
-        self.check(inputs, output)
-
-        self.assertEqual(output(0.5, 0.5), expected)
-        self.assertEqual(output(0.5, 1.0), expected)
-        self.assertEqual(output(0.5, 1.5), expected)
-        self.assertEqual(output(1.0, 0.5), expected)
-        self.assertEqual(output(1.0, 1.0), expected)
-        self.assertEqual(output(1.0, 1.5), expected)
-        self.assertEqual(output(1.5, 0.5), expected)
-        self.assertEqual(output(1.5, 1.0), expected)
-        self.assertEqual(output(1.5, 1.5), expected)
-
-    def test_singleton_weighted(self):
+    def test_01_singleton_weighted(self):
         expected = 6.1279
 
-        inputs = []
-        inputs.append((1.0, 1.0, expected))
+        self.check(training_data=[(1.0, 1.0, expected)],
+                   test_data=[(x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)])
 
-        (xs, ys, vs) = zip(*inputs)
-        output = self.regress(xs, ys, vs)
-
-        self.check(inputs, output)
-
-        self.assertEqual(output(0.5, 0.5), expected)
-        self.assertEqual(output(0.5, 1.0), expected)
-        self.assertEqual(output(0.5, 1.5), expected)
-        self.assertEqual(output(1.0, 0.5), expected)
-        self.assertEqual(output(1.0, 1.0), expected)
-        self.assertEqual(output(1.0, 1.5), expected)
-        self.assertEqual(output(1.5, 0.5), expected)
-        self.assertEqual(output(1.5, 1.0), expected)
-        self.assertEqual(output(1.5, 1.5), expected)
-
-    def test_sorted(self):
-        inputs = []
-        inputs.append((1.0, 1.0, 1.0))
-        inputs.append((1.0, 2.0, 3.0))
-        inputs.append((2.0, 1.0, 3.0))
-        inputs.append((3.0, 3.0, 6.0))
-
-        (xs, ys, vs) = zip(*inputs)
-
-        output = self.regress(xs, ys, vs)
-
-        self.check(inputs, output)
-
-        for (x, y, expected) in inputs:
-            with self.subTest(x = x, y = y):
-                self.assertEqual(output(x, y), expected)
+    def test_02_isotonic_small(self):
+        self.check_isotonic(((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0)))
 
 class Isotonic2dL1BinaryTestCase(Isotonic2dBase, unittest.TestCase):
     def check(self, inputs, a, b, output):
@@ -111,7 +88,7 @@ class Isotonic2dL1BinaryTestCase(Isotonic2dBase, unittest.TestCase):
 
         output = self.regress(inputs, a, b)
 
-        self.check(inputs, a, b, output)
+        #self.check(inputs, a, b, output)
 
         # this particular case should have a unique output value, but
         # both choices have the same regression error.
@@ -131,7 +108,7 @@ class Isotonic2dL1BinaryTestCase(Isotonic2dBase, unittest.TestCase):
         for (a, b) in [(1, 3), (3, 6)]:
             output = self.regress(inputs, a, b)
 
-            self.check(inputs, a, b, output)
+            #self.check(inputs, a, b, output)
 
             for (x, y, v, _) in inputs:
                 with self.subTest(a = a, b = b, x = x, y = y):
@@ -146,88 +123,64 @@ class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     Test L1 support from isotonic2d.regress_isotonic_2d_l1.
     """
 
-    def regress(self, *args, **kwargs):
-        return isotonic2d.regress_isotonic_2d_l1(*args, **kwargs)
+    def fit(self, training_data):
+        return isotonic2d.regress_isotonic_2d_l1(*zip(*training_data))
 
 class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
     Test L2 support from isotonic2d.regress_isotonic_2d_l2.
     """
 
-    def check(self, inputs, output):
-        super(Isotonic2dL2TestCase, self).check(inputs, output)
+    # def check(self, inputs, output):
+    #     super(Isotonic2dL2TestCase, self).check(inputs, output)
 
-        # check level sets match average of their members.
+    #     # check level sets match average of their members.
 
-        level_sets = {}
-        for row in inputs:
-            (x0, y0, v0) = row[:3]
-            w0 = row[3] if len(row) > 3 else 1.0
+    #     level_sets = {}
+    #     for row in inputs:
+    #         (x0, y0, v0) = row[:3]
+    #         w0 = row[3] if len(row) > 3 else 1.0
 
-            r0 = output(x0, y0)
-            level_sets.setdefault(r0, [0.0, 0.0])
-            level_sets[r0][0] += v0 * w0 # sum(value * weight)
-            level_sets[r0][1] += w0 # sum(weight)
+    #         r0 = output(x0, y0)
+    #         level_sets.setdefault(r0, [0.0, 0.0])
+    #         level_sets[r0][0] += v0 * w0 # sum(value * weight)
+    #         level_sets[r0][1] += w0 # sum(weight)
 
-        for r in level_sets.keys():
-            with self.subTest(r = r):
-                # check level sets match their weighted average.
-                self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
+    #     for r in level_sets.keys():
+    #         with self.subTest(r = r):
+    #             # check level sets match their weighted average.
+    #             self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
 
-    def regress(self, *args, **kwargs):
-        return isotonic2d.regress_isotonic_2d_l2(*args, **kwargs)
+    def fit(self, training_data):
+        return isotonic2d.regress_isotonic_2d_l2(*zip(*training_data))
 
-    def test_unsorted(self):
+    def test_10_unsorted(self):
         expected = 0.25
 
-        inputs = []
-        inputs.append((1.0, 1.0, 1.0))
-        inputs.append((1.0, 2.0, 1.0))
-        inputs.append((2.0, 1.0, 1.0))
-        inputs.append((3.0, 3.0, -2.0))
-
-        (xs, ys, vs) = zip(*inputs)
-
-        output = self.regress(xs, ys, vs)
-
-        self.check(inputs, output)
-
         test_range = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
-        for x in test_range:
-            for y in test_range:
-                with self.subTest(x = x, y = y):
-                    self.assertAlmostEqual(output(x, y), expected, places = 5)
+        self.check(training_data = [(1.0, 1.0, 1.0),
+                                    (1.0, 2.0, 1.0),
+                                    (2.0, 1.0, 1.0),
+                                    (3.0, 3.0, -2.0)],
+                   test_data = [(x, y, expected) for x in test_range for y in test_range])
 
 class Isotonic2dTestCase(Isotonic2dL2TestCase):
     """
     Test isotonic2d.regress_isotonic_2d with the same L2 test cases.
     """
-    def regress(self, *args, **kwargs):
-        return isotonic2d.regress_isotonic_2d(*args, **kwargs)
+    def fit(self, training_data):
+        return isotonic2d.regress_isotonic_2d(*zip(*training_data))
 
-class Isotonic2dRegressionTestCase(unittest.TestCase):
+class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
     """
     Test isotonic2d.Isotonic2dRegression.
     """
 
-    def check(self, X, y, output_expected):
+    def fit(self, training_data):
         model = isotonic2d.Isotonic2dRegression()
-        model.fit(X, y)
+        model.fit(X=[r[:2] for r in training_data], y = [r[2] for r in training_data])
 
-        output = model.predict(X)
-        for i in range(len(output_expected)):
-            with self.subTest(i = i, X_i = X[i]):
-                self.assertAlmostEqual(output[i], output_expected[i])
-
-    def test_00_constant(self):
-        self.check([[0, 0]], [0], [0])
-        self.check([[0, 0], [1, 1]], [1, 1], [1, 1])
-
-    def test_01_sorted(self):
-        self.check([[0, 0], [1, 1]], [3, 5], [3, 5])
-
-    def test_01_unsorted(self):
-        self.check([[0, 0], [1, 1]], [2, 0], [1, 1])
+        return lambda x, y: model.predict([(x, y)])[0]
 
 ############################################################
 # startup handling #########################################
