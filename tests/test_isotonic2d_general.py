@@ -75,8 +75,7 @@ class Isotonic2dLpBase(Isotonic2dBase):
             return x + y ** 2
 
         data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-        with self.subTest(dr=6):
-            self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
+        self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
 
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
