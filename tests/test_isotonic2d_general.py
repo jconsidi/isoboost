@@ -12,13 +12,14 @@ class Isotonic2dBase(object):
     def check(self, training_data, test_data):
         # validate isotonicity of test data
 
-        for (x0, y0, v0) in test_data:
-            for (x1, y1, v1) in test_data:
-                if x0 > x1 or y0 > y1:
-                    continue
+        if len(test_data) <= 100:
+            for (x0, y0, v0) in test_data:
+                for (x1, y1, v1) in test_data:
+                    if x0 > x1 or y0 > y1:
+                        continue
 
-                with self.subTest(x0=x0, y0=y0, v0=v0, x1=x1, y1=y1, v1=v1):
-                    self.assertLessEqual(v0, v1)
+                    with self.subTest(x0=x0, y0=y0, v0=v0, x1=x1, y1=y1, v1=v1):
+                        self.assertLessEqual(v0, v1)
 
         # train prediction function
 
