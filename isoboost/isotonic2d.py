@@ -78,7 +78,7 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     # 
     # Isotonic Regression via Partitioning, section 4.2
 
-    inputs.sort()
+    inputs = sorted(inputs)
 
     # min_error[k][c] is the minimum error from
     # 
@@ -91,7 +91,7 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     c_max = len(y_indexes) # used for no b usage case
 
     # base case: no points regressed => zero error
-    min_error = [rangemap.RangeMap(0, c_max - 1, math.inf) + rangemap.RangeMap(c_max, c_max, 0.0)]
+    min_error = [rangemap.RangeMap(0, c_max, 0.0)]
 
     # inductive steps: add one point at a time
 
@@ -127,7 +127,7 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     current_choice = min_error[-1].get_min_x()
     for i in range(len(inputs) - 1, -1, -1):
         (x_i, y_i, _, _) = inputs[i]
-        c_i = x_indexes[x_i]
+        c_i = y_indexes[y_i]
 
         regressed[(x_i, y_i)] = b if c_i >= current_choice else a
 

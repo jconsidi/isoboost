@@ -38,10 +38,35 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
 
     def check_isotonic(self, training_data, a, b):
         training_data = tuple(training_data)
-        self.check(training_data, a, b, training_data)
+        test_data = tuple(r[:3] for r in training_data)
+        self.check(training_data, a, b, test_data)
 
     def fit(self, training_data, a, b):
         return isotonic2d._regress_isotonic_2d_l1_binary(training_data, a, b)
+
+    def test_00_singleton(self):
+        """Test with a single training row.
+        """
+
+        def check_helper(v, a, b, v_expected):
+            with self.subTest(v=v, a=a, b=b, v_expected=v_expected):
+                self.check([(1.0, 1.0, v, 1.0)], a, b, [(1.0, 1.0, v_expected)])
+
+        check_helper(-1.0, 0.0, 1.0, 0.0)
+        check_helper(0.0, 0.0, 1.0, 0.0)
+        check_helper(0.1, 0.0, 1.0, 0.0)
+        check_helper(0.4, 0.0, 1.0, 0.0)
+        check_helper(0.6, 0.0, 1.0, 1.0)
+        check_helper(0.9, 0.0, 1.0, 1.0)
+        check_helper(1.0, 0.0, 1.0, 1.0)
+        check_helper(2.0, 0.0, 1.0, 1.0)
+
+    def test_01_pair_isotonic(self):
+        """Test with two training rows.
+        """
+
+        self.check_isotonic([(0.0, 0.0, 0.0, 1.0), (0.0, 1.0, 1.0, 1.0)], 0.0, 1.0)
+        self.check_isotonic([(0.0, 0.0, 0.0, 1.0), (1.0, 0.0, 1.0, 1.0)], 0.0, 1.0)
 
     def test_04_isotonic(self):
         """
@@ -55,7 +80,7 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
         training_data.append((3.0, 3.0, 6.0, 1.0))
 
         for (a, b) in [(1, 3), (3, 6)]:
-            test_data = [(x, y, a if v < a else b) for (x, y, v, w) in training_data]
+            test_data = [(x, y, a if v <= a else b) for (x, y, v, w) in training_data]
             self.check(training_data, a, b, test_data)
     
     def test_10_ambiguous(self):
