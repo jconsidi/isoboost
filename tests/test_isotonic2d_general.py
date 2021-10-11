@@ -61,62 +61,6 @@ class Isotonic2dLpBase(Isotonic2dBase):
 
     def test_02_isotonic_small(self):
         self.check_isotonic(((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0)))
-
-class Isotonic2dL1BinaryTestCase(Isotonic2dBase, unittest.TestCase):
-    def check(self, inputs, a, b, output):
-        super(Isotonic2dL1BinaryTestCase, self).check(inputs, lambda x, y: output[(x, y)])
-
-        for r in output.values():
-            self.assertIn(r, (a, b), msg = 'output not limited to binary values specified')
-
-    def regress(self, inputs, a, b):
-        return isotonic2d._regress_isotonic_2d_l1_binary(inputs, a, b)
-
-    def test_0(self):
-        """
-        Test an input that was broken while implementing L2.
-        """
-
-        inputs = []
-        inputs.append((1.0, 1.0, 1.0, 0.75))
-        inputs.append((1.0, 2.0, 1.0, 0.75))
-        inputs.append((2.0, 1.0, 1.0, 0.75))
-        inputs.append((3.0, 3.0, 0.0, 2.25))
-
-        a = 0.0
-        b = 1.0
-
-        output = self.regress(inputs, a, b)
-
-        #self.check(inputs, a, b, output)
-
-        # this particular case should have a unique output value, but
-        # both choices have the same regression error.
-        self.assertEqual(len(set(output.values())), 1, msg = 'output value should be unique')
-
-    def test_sorted(self):
-        """
-        Test inputs from a sorted test case.
-        """
-
-        inputs = []
-        inputs.append((1.0, 1.0, 1.0, 1.0))
-        inputs.append((1.0, 2.0, 3.0, 1.0))
-        inputs.append((2.0, 1.0, 3.0, 1.0))
-        inputs.append((3.0, 3.0, 6.0, 1.0))
-
-        for (a, b) in [(1, 3), (3, 6)]:
-            output = self.regress(inputs, a, b)
-
-            #self.check(inputs, a, b, output)
-
-            for (x, y, v, _) in inputs:
-                with self.subTest(a = a, b = b, x = x, y = y):
-                    r = output[(x, y)]
-                    if v <= a:
-                        self.assertEqual(r, a)
-                    elif v >= b:
-                        self.assertEqual(r, b)
     
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
