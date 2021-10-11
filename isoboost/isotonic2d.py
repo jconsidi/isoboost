@@ -27,30 +27,59 @@ def _build_output_function(regressed):
 
     regressed_min = min(regressed.values())
 
-    regressed_by_x = {}
-    for ((x, y), r) in regressed.items():
-        regressed_by_x.setdefault(x, []).append((y, r))
+    x_batches = {}
+    for ((x, y), v) in regressed.items():
+        x_batches.setdefault(x, []).append((y, v))
 
-    for (x, yrs) in regressed_by_x.items():
-        yrs.sort()
+    xs = sorted(x_batches.keys())
+    regressed_by_r = [x_batches[xs[0]]]
+    for x in xs[1:]:
+        x_batch = x_batches[x]
+        x_batch.sort()
 
-    # switch to list of (x, [(y,r),...])
-    regressed_by_x = sorted(regressed_by_x.items())
+        # TODO: faster / more compact merges for sparse cases
+        previous = regressed_by_r[-1]
+
+        # combine into one sorted array
+
+        merged = []
+        i = 0 # position in x_batch
+        j = 0 # position in previous
+        while (i < len(x_batch)) and (j < len(previous)):
+            if x_batch[i] <= previous[j]:
+                merged.append(x_batch[i])
+                i += 1
+            else:
+                merged.append(previous[j])
+                j += 1
+        merged.extend(x_batch[i:])
+        merged.extend(previous[j:])
+
+        # filter out redundant / degenerate values
+
+        filtered = [merged[0]]
+        for i in range(1, len(merged)):
+            if filtered[-1][0] == merged[i][0]:
+                # matching y value, so replace smaller value
+                filtered[-1] = merged[i]
+            elif filtered[-1][1] < merged[i][1]:
+                # increasing value
+                filtered.append(merged[i])
+
+        # finished for this row
+
+        regressed_by_r.append(filtered)
 
     def fit(x, y):
-        # TODO make this run in O(log n) time.
-        output = regressed_min # TODO make this an option
-        for (x0, yrs) in regressed_by_x:
-            if x0 > x:
-                break
+        r = bisect.bisect_right(xs, x) - 1
+        if r < 0:
+            return regressed_min
 
-            if yrs[0][0] > y:
-                continue
+        c = bisect.bisect_right(regressed_by_r[r], (y, math.inf)) - 1
+        if c < 0:
+            return regressed_min
 
-            y_index = bisect.bisect_right(yrs, (y, math.inf)) - 1
-            output = max(output, yrs[y_index][1])
-
-        return output
+        return regressed_by_r[r][c][1]
 
     return fit
 

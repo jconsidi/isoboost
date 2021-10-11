@@ -91,6 +91,14 @@ class Isotonic2dLpBase(Isotonic2dBase):
 
         self.check_isotonic(training_data)
 
+    def test_06_isotonic_big(self):
+        def f(x, y):
+            return x + y
+
+        n = 20
+        data_range = [i / n for i in range(n)]
+        self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
+
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
     Test L1 support from isotonic2d.regress_isotonic_2d_l1.
