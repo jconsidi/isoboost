@@ -95,7 +95,7 @@ class Isotonic2dLpBase(Isotonic2dBase):
         def f(x, y):
             return x + y
 
-        n = 20
+        n = 25
         data_range = [i / n for i in range(n)]
         self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
 

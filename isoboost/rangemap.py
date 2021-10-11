@@ -1,6 +1,28 @@
 # rangemap.py
 
-import functools
+def _balance(left, right):
+    if left.x_max + 1 != right.x_min:
+        raise ValueError('ranges are not adjacent')
+
+    new_rank = max(left.rank, right.rank)
+    while (left.x_min >> new_rank) != (right.x_min >> new_rank):
+        new_rank += 1
+
+    split_rank = new_rank - 1
+    if (left.x_max >> split_rank) != (right.x_min >> split_rank):
+        return (left, right)
+
+    split_mid = (right.x_max >> split_rank) << split_rank
+    if left.x_max >= split_mid:
+        left_new = left.get_range(left.x_min, split_mid - 1)
+        right_new = RangeMap(left = left.get_range(split_mid, left.x_max),
+                             right = right)
+    else:
+        left_new = RangeMap(left = left,
+                            right = right.get_range(right.x_min, split_mid - 1))
+        right_new = right.get_range(split_mid, right.x_max)
+
+    return (left_new, right_new)
 
 class RangeMap(object):
     """
@@ -34,6 +56,11 @@ class RangeMap(object):
         else:
             raise ValueError('neither leaf value nor children specified')
 
+        # balance
+
+        if left:
+            (left, right) = _balance(left, right)
+
         # leaf value or children
         self.v = v
         self.left = left
@@ -51,6 +78,13 @@ class RangeMap(object):
 
             self.x_min = x_min
             self.x_max = x_max
+
+        self.height = max(left.height, right.height) + 1 if left else 0
+
+        self.rank = max(left.rank, right.rank) if left else 0
+        while (self.x_min >> self.rank) != (self.x_max >> self.rank):
+            self.rank += 1
+        assert self.height <= self.rank
 
     def __add__(self, other):
         if other is None:
@@ -70,11 +104,7 @@ class RangeMap(object):
         if a.x_max + 1 != b.x_min:
             raise ValueError('ranges are not adjacent')
 
-        return self._balance(a, b)
-
-    def _balance(self, *children):
-        # TODO : balance this new tree
-        return functools.reduce(lambda a, b: RangeMap(left = a, right = b), children)
+        return RangeMap(left = a, right = b)
 
     def _check_range(self, x_min, x_max):
         """
@@ -137,4 +167,4 @@ class RangeMap(object):
             # entirely contained within right child
             return self.right.get_range(x_min, x_max) + self.v
 
-        return self._balance(self.left.get_range(x_min, self.left.x_max), self.right.get_range(self.right.x_min, x_max)) + self.v
+        return RangeMap(left=self.left.get_range(x_min, self.left.x_max), right=self.right.get_range(self.right.x_min, x_max), v = self.v)
