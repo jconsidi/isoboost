@@ -179,8 +179,9 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
     # each vertex until each vertex has a unique output.
 
     regressed = {}
-    def partition(partition_inputs, partition_choices):
+    def partition(partition_inputs):
         partition_inputs = list(partition_inputs)
+        partition_choices = sorted(set(r[2] for r in partition_inputs))
 
         if len(partition_inputs) <= 0:
             return
@@ -208,14 +209,12 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
         # recursively split based on the binary regression
 
         # low partition
-        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] < partition_b],
-                  partition_choices[:mid_index])
+        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] < partition_b])
 
         # high partition
-        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] >= partition_b],
-                  partition_choices[mid_index:])
+        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] >= partition_b])
 
-    partition(list(zip(xs, ys, vs, ws)), sorted(set(vs)))
+    partition(list(zip(xs, ys, vs, ws)))
 
     return _build_output_function(regressed)
 

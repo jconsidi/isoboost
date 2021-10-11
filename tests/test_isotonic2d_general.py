@@ -78,6 +78,18 @@ class Isotonic2dLpBase(Isotonic2dBase):
         data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
         self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
 
+    def test_05_isotonic_unstable(self):
+        """This test case triggers numerical error with the initial L1 binary
+        split on 0.3 vs 0.30000000000000004. This can inadvertently
+        put "0.2 cases" on the wrong side of the split which is then
+        handled poorly.
+
+        """
+
+        training_data = [(0.0, 0.1, 0.1), (0.1, 0.0, 0.1), (0.1, 0.1, 0.2), (0.2, 0.0, 0.2), (0.2, 0.1, 0.30000000000000004), (0.3, 0.0, 0.3), (0.3, 0.1, 0.4), (0.4, 0.0, 0.4)]
+
+        self.check_isotonic(training_data)
+
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
     Test L1 support from isotonic2d.regress_isotonic_2d_l1.
