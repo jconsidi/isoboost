@@ -208,19 +208,20 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
     # regression (above) to repeatedly half the choices available for
     # each vertex until each vertex has a unique output.
 
+    partition_queue = [list(zip(xs, ys, vs, ws))]
     regressed = {}
-    def partition(partition_inputs):
-        partition_inputs = list(partition_inputs)
 
+    while partition_queue:
+        partition_inputs = partition_queue.pop()
         if len(partition_inputs) <= 0:
-            return
+            continue
 
         partition_choices = set(r[2] for r in partition_inputs)
         if len(partition_choices) == 1:
             (v,) = partition_choices
             for (x, y, _, _) in partition_inputs:
                 regressed[(x, y)] = v
-            return
+            continue
 
         if len(partition_choices) == 2:
             partition_b = max(partition_choices)
@@ -236,12 +237,10 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
         # recursively split based on the binary regression
 
         # low partition
-        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] < partition_b])
+        partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] < partition_b])
 
         # high partition
-        partition([r for r in partition_inputs if binary_values[(r[0], r[1])] >= partition_b])
-
-    partition(list(zip(xs, ys, vs, ws)))
+        partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] >= partition_b])
 
     return _build_output_function(regressed)
 
