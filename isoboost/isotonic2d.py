@@ -32,7 +32,7 @@ def _build_output_function(regressed):
         x_batches.setdefault(x, []).append((y, v))
 
     xs = sorted(x_batches.keys())
-    regressed_by_r = [x_batches[xs[0]]]
+    regressed_by_r = [sorted(x_batches[xs[0]])]
     for x in xs[1:]:
         x_batch = x_batches[x]
         x_batch.sort()
