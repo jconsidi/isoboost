@@ -108,8 +108,6 @@ class RangeMap(object):
         return min(self.left.get_min(x_min, self.left.x_max), self.right.get_min(self.right.x_min, x_max)) + self.v
 
     def get_min_x(self):
-        x_check = min(range(self.x_min, self.x_max + 1), key = lambda x : (self.get_min(x, x), x))
-
         if self.left is None:
             return self.x_min
 
