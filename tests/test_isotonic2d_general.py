@@ -61,7 +61,31 @@ class Isotonic2dLpBase(Isotonic2dBase):
 
     def test_02_isotonic_small(self):
         self.check_isotonic(((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0)))
-    
+
+    def test_03_isotonic(self):
+        def f(x, y):
+            return x + y ** 2
+
+        data = [(x, y, f(x, y)) for (x, y) in
+                [(0.0, 0.0), (0.0, 0.2)]]
+        self.check_isotonic(data)
+
+    def test_04_isotonic_medium(self):
+        def f(x, y):
+            return x + y ** 2
+
+        data_range = [0.0]
+        with self.subTest(dr=1):
+            self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
+
+        data_range = [0.0, 0.2]
+        with self.subTest(dr=2):
+            self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
+
+        data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+        with self.subTest(dr=6):
+            self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
+
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
     Test L1 support from isotonic2d.regress_isotonic_2d_l1.

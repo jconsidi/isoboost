@@ -198,7 +198,7 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
             return
 
         mid_index = (len(partition_choices) + 1) // 2
-        partition_a = partition_choices[mid_index] - 1
+        partition_a = partition_choices[mid_index - 1]
         partition_b = partition_choices[mid_index]
 
         binary_values = _regress_isotonic_2d_l1_binary(partition_inputs,
