@@ -35,7 +35,8 @@ class Isotonic2dBase(object):
 
     def check_isotonic(self, training_data):
         training_data = tuple(training_data)
-        self.check(training_data, training_data)
+        test_data = tuple(r[:3] for r in training_data)
+        self.check(training_data, test_data)
 
     def fit(self, training_data):
         """Build model for training data and return function to predict a single point.
