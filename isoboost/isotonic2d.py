@@ -216,31 +216,32 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
         if len(partition_inputs) <= 0:
             continue
 
-        partition_choices = set(r[2] for r in partition_inputs)
-        if len(partition_choices) == 1:
-            (v,) = partition_choices
+        partition_values = sorted(set(r[2] for r in partition_inputs))
+
+        # we may need to try multiple splits if adjacent values are
+        # close enough that numerical error masks the difference
+        # between them.
+        partition_abs = [(partition_values[i], partition_values[i + 1]) for i in range(len(partition_values) - 1)]
+        # prefer choices from the middle
+        # LATER: make O(n)
+        partition_abs.sort(key = lambda a_b: a_b[0] * (len(partition_values) - a_b[1]), reverse=True)
+
+        for (partition_a, partition_b) in partition_abs:
+            binary_values = _regress_isotonic_2d_l1_binary(partition_inputs,
+                                                           partition_a,
+                                                           partition_b)
+            binary_choices = set(binary_values.values())
+            if len(binary_choices) > 1:
+                # successful split
+                for c in binary_choices:
+                    partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] == c])
+                break
+        else:
+            # no successful splits. just go with median.
+            # LATER: make it weighted median
+            v = statistics.median(partition_values)
             for (x, y, _, _) in partition_inputs:
                 regressed[(x, y)] = v
-            continue
-
-        if len(partition_choices) == 2:
-            partition_b = max(partition_choices)
-            partition_a = min(partition_choices)
-        else:
-            partition_b = statistics.median_high(partition_choices)
-            partition_a = max(v for v in partition_choices if v < partition_b)
-
-        binary_values = _regress_isotonic_2d_l1_binary(partition_inputs,
-                                                       partition_a,
-                                                       partition_b)
-
-        # recursively split based on the binary regression
-
-        # low partition
-        partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] < partition_b])
-
-        # high partition
-        partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] >= partition_b])
 
     return _build_output_function(regressed)
 
