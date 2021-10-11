@@ -8,6 +8,7 @@
 import bisect
 import itertools
 import math
+import statistics
 
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
@@ -181,26 +182,23 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
     regressed = {}
     def partition(partition_inputs):
         partition_inputs = list(partition_inputs)
-        partition_choices = sorted(set(r[2] for r in partition_inputs))
 
         if len(partition_inputs) <= 0:
             return
-        if len(partition_inputs) == 1:
-            ((x, y, v, _),) = partition_inputs
-            regressed[(x, y)] = v
-            return
 
-        if len(partition_choices) == 0:
-            raise RuntimeError('invariant failed')
+        partition_choices = set(r[2] for r in partition_inputs)
         if len(partition_choices) == 1:
             (v,) = partition_choices
             for (x, y, _, _) in partition_inputs:
                 regressed[(x, y)] = v
             return
 
-        mid_index = (len(partition_choices) + 1) // 2
-        partition_a = partition_choices[mid_index - 1]
-        partition_b = partition_choices[mid_index]
+        if len(partition_choices) == 2:
+            partition_b = max(partition_choices)
+            partition_a = min(partition_choices)
+        else:
+            partition_b = statistics.median_high(partition_choices)
+            partition_a = max(v for v in partition_choices if v < partition_b)
 
         binary_values = _regress_isotonic_2d_l1_binary(partition_inputs,
                                                        partition_a,
