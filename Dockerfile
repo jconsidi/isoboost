@@ -11,6 +11,7 @@ RUN apt-get update
 
 RUN apt-get install -y \
   build-essential \
+  git \
   python3 \
   python3-dev \
   python3-pip
@@ -30,6 +31,7 @@ RUN python3 -m compileall isoboost/*.py
 ADD setup.py $HOME
 RUN python3 setup.py install
 
+ADD examples/*.py examples/
 ADD scripts/*.py scripts/*.sh scripts/
 ADD tests/*.py tests/*.sh tests/
 
