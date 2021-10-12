@@ -2,7 +2,7 @@
 
 import unittest
 
-from isoboost import isotonic1d
+from isoboost import regress_isotonic_1d
 
 class Isotonic1dTestCase(unittest.TestCase):
     def check_generic(self, inputs, output):
@@ -39,7 +39,7 @@ class Isotonic1dTestCase(unittest.TestCase):
         inputs.append((1.0, expected))
 
         (xs, vs) = zip(*inputs)
-        output = isotonic1d.regress_isotonic_1d(xs, vs)
+        output = regress_isotonic_1d(xs, vs)
 
         self.assertEqual(output(0.5), expected)
         self.assertEqual(output(1.0), expected)
@@ -54,7 +54,7 @@ class Isotonic1dTestCase(unittest.TestCase):
         inputs.append((1.0, expected, 3.0))
 
         (xs, vs, ws) = zip(*inputs)
-        output = isotonic1d.regress_isotonic_1d(xs, vs, ws)
+        output = regress_isotonic_1d(xs, vs, ws)
 
         self.assertEqual(output(0.5), expected)
         self.assertEqual(output(1.0), expected)
@@ -71,7 +71,7 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         (xs, vs) = zip(*inputs)
 
-        output = isotonic1d.regress_isotonic_1d(xs, vs)
+        output = regress_isotonic_1d(xs, vs)
 
         self.assertEqual(output(0.5), 1.1)
         self.assertEqual(output(1.0), 1.1)

@@ -2,7 +2,7 @@
 
 import unittest
 
-from isoboost import isotonic2d
+from isoboost.isotonic2d import _regress_isotonic_2d_l1_binary
 
 class Isotonic2dBinaryTestCase(unittest.TestCase):
     """
@@ -42,7 +42,7 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
         self.check(training_data, a, b, test_data)
 
     def fit(self, training_data, a, b):
-        return isotonic2d._regress_isotonic_2d_l1_binary(training_data, a, b)
+        return _regress_isotonic_2d_l1_binary(training_data, a, b)
 
     def test_00_singleton(self):
         """Test with a single training row.

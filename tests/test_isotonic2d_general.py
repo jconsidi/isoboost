@@ -2,7 +2,10 @@
 
 import unittest
 
-from isoboost import isotonic2d
+from isoboost import Isotonic2dRegression
+from isoboost import regress_isotonic_2d
+from isoboost import regress_isotonic_2d_l1
+from isoboost import regress_isotonic_2d_l2
 
 class Isotonic2dBase(object):
     """
@@ -101,15 +104,15 @@ class Isotonic2dLpBase(Isotonic2dBase):
 
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
-    Test L1 support from isotonic2d.regress_isotonic_2d_l1.
+    Test L1 support from regress_isotonic_2d_l1.
     """
 
     def fit(self, training_data):
-        return isotonic2d.regress_isotonic_2d_l1(*zip(*training_data))
+        return regress_isotonic_2d_l1(*zip(*training_data))
 
 class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
-    Test L2 support from isotonic2d.regress_isotonic_2d_l2.
+    Test L2 support from regress_isotonic_2d_l2.
     """
 
     # def check(self, inputs, output):
@@ -133,7 +136,7 @@ class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
     #             self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
 
     def fit(self, training_data):
-        return isotonic2d.regress_isotonic_2d_l2(*zip(*training_data))
+        return regress_isotonic_2d_l2(*zip(*training_data))
 
     def test_10_unsorted(self):
         expected = 0.25
@@ -147,18 +150,18 @@ class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
 
 class Isotonic2dTestCase(Isotonic2dL2TestCase):
     """
-    Test isotonic2d.regress_isotonic_2d with the same L2 test cases.
+    Test regress_isotonic_2d with the same L2 test cases.
     """
     def fit(self, training_data):
-        return isotonic2d.regress_isotonic_2d(*zip(*training_data))
+        return regress_isotonic_2d(*zip(*training_data))
 
 class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
     """
-    Test isotonic2d.Isotonic2dRegression.
+    Test Isotonic2dRegression.
     """
 
     def fit(self, training_data):
-        model = isotonic2d.Isotonic2dRegression()
+        model = Isotonic2dRegression()
         model.fit(X=[r[:2] for r in training_data], y = [r[2] for r in training_data])
 
         return lambda x, y: model.predict([(x, y)])[0]
