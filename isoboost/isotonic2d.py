@@ -278,6 +278,9 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
         values[k] = values.get(k, 0.0) + v * w # sum(v * w)
         weights[k] = weights.get(k, 0.0) + w # sum(w)
 
+    for k in values:
+        values[k] /= weights[k]
+
     inputs = [(x, y, values[(x, y)], weights[(x,y)]) for (x, y) in values.keys()]
 
     # Optimal L2 regressions can not be restricted to input values, so
