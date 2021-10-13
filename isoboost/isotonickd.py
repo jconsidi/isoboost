@@ -1,8 +1,11 @@
 # isotonickd.py
 
+import logging
+
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.base import check_array
+from sklearn.metrics import r2_score
 
 from .isotonic1d import regress_isotonic_1d
 from .isotonic2d import regress_isotonic_2d
@@ -28,7 +31,7 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
 
         self.fs = []
         self.k = X.shape[1]
-        
+
         if self.k == 0:
             raise ValueError("cannot fit 0D data")
         elif self.k == 1:
@@ -38,7 +41,16 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
                 self.n_estimators = self.k * 2 - 1 if self.k > 2 else 1
 
             self.fs.append(regress_isotonic_2d(xs=X[:,0], ys=X[:,1], vs=list(y), ws=sample_weight))
+            if len(y) <= 1:
+                # degenerate case - just one sample, so stop immediately
+                # LATER: move this earlier
+                return
+
             previous_prediction = [self.fs[0](*r) for r in zip(X[:,0], X[:,1])]
+
+            training_scores = []
+            training_scores.append(r2_score(y, previous_prediction))
+            logging.warning("IsotonicKdRegression.fit() score %.6f after initial model", training_scores[0])
 
             for i in range(1, self.n_estimators):
                 current_input = X[:,(i+1) % self.k]
@@ -48,6 +60,20 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
                                                    ws=sample_weight))
 
                 previous_prediction = [self.fs[-1](*r) for r in zip(previous_prediction, current_input)]
+                training_scores.append(r2_score(y, previous_prediction))
+                logging.warning("IsotonicKdRegression.fit() score %.6f after %d models", training_scores[-1], len(self.fs))
+
+                if training_scores[-1] >= 1.0:
+                    logging.warning("IsotonicKdRegression.fit() stopping after %d models", len(self.fs))
+                    break
+
+                if len(training_scores) >= self.k + 1:
+                    # check if the last round through input columns improved the score
+                    if training_scores[-1] <= training_scores[-1-self.k]:
+                        # training score did not improve, so drop the last round of models
+                        self.fs[-self.k:] = []
+                        logging.warning("IsotonicKdRegression.fit() rolling back to first %d models", len(self.fs))
+                        break
 
     def predict(self, T):
         """Predict new data by bilinear interpolation.
@@ -87,7 +113,7 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
 
         prediction = [self.fs[0](x, y) for (x, y) in zip(T[:,0], T[:,1])]
 
-        for i in range(1, self.n_estimators):
+        for i in range(1, len(self.fs)):
             f = self.fs[i]
             current_input = T[:,(i+1) % self.k]
             prediction = [f(x, y) for (x, y) in zip(prediction, current_input)]
