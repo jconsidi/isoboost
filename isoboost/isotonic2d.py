@@ -15,6 +15,7 @@ from sklearn.base import TransformerMixin
 from sklearn.utils import check_array
 
 from . import rangemap
+from .piecewise import PiecewiseBilinear
 
 
 def _build_output_function(regressed):
@@ -26,20 +27,35 @@ def _build_output_function(regressed):
     if len(regressed) <= 0:
         raise ValueError("no regressed values")
 
-    regressed_min = min(regressed.values())
+    y_min = min(y for (x, y) in regressed)
+    v_min = min(regressed.values())
 
     x_batches = {}
     for ((x, y), v) in regressed.items():
         x_batches.setdefault(x, []).append((y, v))
 
     xs = sorted(x_batches.keys())
-    regressed_by_r = [sorted(x_batches[xs[0]])]
+
+    # collect all points necessary for bilinear interpolation to
+    # preserve isotonicity and level sets.
+    points = []
+
+    # first row needs special handling to seed minimum value
+
+    current = sorted(x_batches[xs[0]])
+    if current[0][0] != y_min:
+        # slip in minimum value at origin
+        current[0:0] = [(y_min, v_min)]
+
+    points.extend((xs[0], y, v) for (y, v) in current)
+
+    # iterate over remaining rows merging new points
+
     for x in xs[1:]:
+        previous = current
+
         x_batch = x_batches[x]
         x_batch.sort()
-
-        # TODO: faster / more compact merges for sparse cases
-        previous = regressed_by_r[-1]
 
         # combine into one sorted array
 
@@ -63,26 +79,24 @@ def _build_output_function(regressed):
             if filtered[-1][0] == merged[i][0]:
                 # matching y value, so replace smaller value
                 filtered[-1] = merged[i]
+            elif filtered[-1][1] == merged[i][1]:
+                # same value, but growing level set
+                if (len(filtered) < 2) or filtered[-2][1] < merged[i][1]:
+                    # expanding from a single y value
+                    filtered.append(merged[i])
+                else:
+                    # expanding a proper range of y values
+                    filtered[-1] = merged[i]
             elif filtered[-1][1] < merged[i][1]:
                 # increasing value
                 filtered.append(merged[i])
 
         # finished for this row
 
-        regressed_by_r.append(filtered)
+        current = filtered
+        points.extend((x, y, v) for (y, v) in current)
 
-    def fit(x, y):
-        r = bisect.bisect_right(xs, x) - 1
-        if r < 0:
-            return regressed_min
-
-        c = bisect.bisect_right(regressed_by_r[r], (y, math.inf)) - 1
-        if c < 0:
-            return regressed_min
-
-        return regressed_by_r[r][c][1]
-
-    return fit
+    return PiecewiseBilinear(points).interpolate
 
 
 def _regress_isotonic_2d_l1_binary(inputs, a, b):
