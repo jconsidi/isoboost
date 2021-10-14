@@ -2,6 +2,7 @@
 
 import itertools
 
+
 def _isotonic_helper(x, xs):
     # finds index to use looking up values in isotonic models.
 
@@ -17,7 +18,8 @@ def _isotonic_helper(x, xs):
 
     return i_min
 
-def regress_isotonic_1d(xs, vs, ws = None):
+
+def regress_isotonic_1d(xs, vs, ws=None):
     # xs/vs/ws = iterators of values for respective parameters below.
     # x = independent variable
     # v = dependent variable

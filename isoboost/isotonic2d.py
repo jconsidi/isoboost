@@ -16,6 +16,7 @@ from sklearn.utils import check_array
 
 from . import rangemap
 
+
 def _build_output_function(regressed):
     """
     Helper function returning output function applying regression
@@ -23,7 +24,7 @@ def _build_output_function(regressed):
     """
 
     if len(regressed) <= 0:
-        raise ValueError('no regressed values')
+        raise ValueError("no regressed values")
 
     regressed_min = min(regressed.values())
 
@@ -43,8 +44,8 @@ def _build_output_function(regressed):
         # combine into one sorted array
 
         merged = []
-        i = 0 # position in x_batch
-        j = 0 # position in previous
+        i = 0  # position in x_batch
+        j = 0  # position in previous
         while (i < len(x_batch)) and (j < len(previous)):
             if x_batch[i] <= previous[j]:
                 merged.append(x_batch[i])
@@ -83,6 +84,7 @@ def _build_output_function(regressed):
 
     return fit
 
+
 def _regress_isotonic_2d_l1_binary(inputs, a, b):
     """
     Helper function used for L1/L2 regression. Will be used to
@@ -91,7 +93,7 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     """
 
     if a >= b:
-        raise ValueError('a < b is required')
+        raise ValueError("a < b is required")
 
     # collect and sort distinct x/y values
 
@@ -101,24 +103,24 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     x_values = sorted(x_values)
     y_values = sorted(y_values)
 
-    x_indexes = {x : u for (u, x) in enumerate(x_values)}
-    y_indexes = {y : v for (v, y) in enumerate(y_values)}
+    x_indexes = {x: u for (u, x) in enumerate(x_values)}
+    y_indexes = {y: v for (v, y) in enumerate(y_values)}
 
     # calculate the error function following the sketch in
-    # 
+    #
     # Isotonic Regression via Partitioning, section 4.2
 
     inputs = sorted(inputs)
 
     # min_error[k][c] is the minimum error from
-    # 
+    #
     # any isotonic regression f of the first k points (0 <= i < k)
-    # 
+    #
     # where f(x_i, y_i) = b implies c_i >= c
     #
     # and for at least one i, f(x_i, y_i) = b and c_i = c
 
-    c_max = len(y_indexes) # used for no b usage case
+    c_max = len(y_indexes)  # used for no b usage case
 
     # base case: no points regressed => zero error
     min_error = [rangemap.RangeMap(0, c_max, 0.0)]
@@ -130,8 +132,8 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
 
         previous_error = min_error[-1]
 
-        a_error = abs(v_i - a) * w_i # error from picking a for v_i
-        b_error = abs(v_i - b) * w_i # error from picking b for v_i
+        a_error = abs(v_i - a) * w_i  # error from picking a for v_i
+        b_error = abs(v_i - b) * w_i  # error from picking b for v_i
 
         # three cases:
         #
@@ -139,8 +141,12 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
         # 2) f(x_i, y_i) = b, is the lowest use of b (could be a tie)
         # 3) f(x_i, y_i) = a, so earliest use of b has to be with higher c_i values.
 
-        case_1_error = previous_error.get_range(0, c_i - 1) + b_error if c_i > 0 else None
-        case_2_error = rangemap.RangeMap(c_i, c_i, previous_error.get_min(c_i, c_max) + b_error)
+        case_1_error = (
+            previous_error.get_range(0, c_i - 1) + b_error if c_i > 0 else None
+        )
+        case_2_error = rangemap.RangeMap(
+            c_i, c_i, previous_error.get_min(c_i, c_max) + b_error
+        )
         case_3_error = previous_error.get_range(c_i + 1, c_max) + a_error
 
         if case_1_error is None:
@@ -173,15 +179,17 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
 
     return regressed
 
-def regress_isotonic_2d(xs, ys, vs, ws = None, p = 2):
+
+def regress_isotonic_2d(xs, ys, vs, ws=None, p=2):
     if p == 1:
-        return regress_isotonic_2d_l1(xs = xs, ys = ys, vs = vs, ws = ws)
+        return regress_isotonic_2d_l1(xs=xs, ys=ys, vs=vs, ws=ws)
     if p == 2:
-        return regress_isotonic_2d_l2(xs = xs, ys = ys, vs = vs, ws = ws)
+        return regress_isotonic_2d_l2(xs=xs, ys=ys, vs=vs, ws=ws)
 
-    raise ValueError('only L1 and L2 norms supported')
+    raise ValueError("only L1 and L2 norms supported")
 
-def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
+
+def regress_isotonic_2d_l1(xs, ys, vs, ws=None):
     # xs/ys/vs/ws = iterators of values for respective parameters below.
     # x,y = independent variables
     # v = dependent variable
@@ -198,11 +206,11 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
     ws = list(ws)
 
     if len(xs) != len(ys) or len(ys) != len(vs) or len(vs) != len(ws):
-        raise ValueError('input lengths do not match')
+        raise ValueError("input lengths do not match")
 
     # duplicate vertexes not allowed.
     if len(set(zip(xs, ys))) < len(xs):
-        raise ValueError('duplicate vertexes not supported for L1 regression')
+        raise ValueError("duplicate vertexes not supported for L1 regression")
 
     # L1 regressions can always return input values. Use binary
     # regression (above) to repeatedly half the choices available for
@@ -221,20 +229,31 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
         # we may need to try multiple splits if adjacent values are
         # close enough that numerical error masks the difference
         # between them.
-        partition_abs = [(partition_values[i], partition_values[i + 1]) for i in range(len(partition_values) - 1)]
+        partition_abs = [
+            (partition_values[i], partition_values[i + 1])
+            for i in range(len(partition_values) - 1)
+        ]
         # prefer choices from the middle
         # LATER: make O(n)
-        partition_abs.sort(key = lambda a_b: a_b[0] * (len(partition_values) - a_b[1]), reverse=True)
+        partition_abs.sort(
+            key=lambda a_b: a_b[0] * (len(partition_values) - a_b[1]), reverse=True
+        )
 
         for (partition_a, partition_b) in partition_abs:
-            binary_values = _regress_isotonic_2d_l1_binary(partition_inputs,
-                                                           partition_a,
-                                                           partition_b)
+            binary_values = _regress_isotonic_2d_l1_binary(
+                partition_inputs, partition_a, partition_b
+            )
             binary_choices = set(binary_values.values())
             if len(binary_choices) > 1:
                 # successful split
                 for c in binary_choices:
-                    partition_queue.append([r for r in partition_inputs if binary_values[(r[0], r[1])] == c])
+                    partition_queue.append(
+                        [
+                            r
+                            for r in partition_inputs
+                            if binary_values[(r[0], r[1])] == c
+                        ]
+                    )
                 break
         else:
             # no successful splits. just go with median.
@@ -245,7 +264,8 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws = None):
 
     return _build_output_function(regressed)
 
-def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
+
+def regress_isotonic_2d_l2(xs, ys, vs, ws=None):
     # xs/ys/vs/ws = iterators of values for respective parameters below.
     # x,y = independent variables
     # v = dependent variable
@@ -262,7 +282,7 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
     ws = list(ws)
 
     if len(xs) != len(ys) or len(ys) != len(vs) or len(vs) != len(ws):
-        raise ValueError('input lengths do not match')
+        raise ValueError("input lengths do not match")
 
     # consume input iterators and match their values.
     inputs = zip(xs, ys, vs, ws)
@@ -275,13 +295,13 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
 
     for (x, y, v, w) in inputs:
         k = (x, y)
-        values[k] = values.get(k, 0.0) + v * w # sum(v * w)
-        weights[k] = weights.get(k, 0.0) + w # sum(w)
+        values[k] = values.get(k, 0.0) + v * w  # sum(v * w)
+        weights[k] = weights.get(k, 0.0) + w  # sum(w)
 
     for k in values:
         values[k] /= weights[k]
 
-    inputs = [(x, y, values[(x, y)], weights[(x,y)]) for (x, y) in values.keys()]
+    inputs = [(x, y, values[(x, y)], weights[(x, y)]) for (x, y) in values.keys()]
 
     # Optimal L2 regressions can not be restricted to input values, so
     # we can not use the same binary search over input values used for
@@ -291,11 +311,12 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
     # rounds.
 
     regressed = {}
+
     def partition(partition_inputs):
         partition_inputs = list(partition_inputs)
 
         if len(partition_inputs) <= 0:
-            raise RuntimeError('empty partition inputs')
+            raise RuntimeError("empty partition inputs")
         if len(partition_inputs) == 1:
             ((x, y, v, _),) = partition_inputs
             regressed[(x, y)] = v
@@ -303,7 +324,7 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
 
         def try_binary(v_split):
             # Using epsilon-partitioning from
-            # 
+            #
             # Isotonic Regression via Partitioning, section 5.1.
 
             binary_inputs = []
@@ -317,7 +338,9 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
 
             return _regress_isotonic_2d_l1_binary(binary_inputs, 0.0, 1.0)
 
-        partition_norm = sum(v * w for (_, _, v, w) in partition_inputs) / sum(w for (_, _, _, w) in partition_inputs)
+        partition_norm = sum(v * w for (_, _, v, w) in partition_inputs) / sum(
+            w for (_, _, _, w) in partition_inputs
+        )
 
         binary_values = try_binary(partition_norm)
         if len(set(binary_values.values())) == 1:
@@ -338,6 +361,7 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws = None):
 
     return _build_output_function(regressed)
 
+
 class Isotonic2dRegression(RegressorMixin, TransformerMixin):
     """Isotonic 2d regression model.
 
@@ -352,7 +376,7 @@ class Isotonic2dRegression(RegressorMixin, TransformerMixin):
         # TODO: shape checks
         X = check_array(X)
         y = check_array(y, ensure_2d=False)
-        self.f_ = regress_isotonic_2d_l2(xs=X[:,0], ys=X[:,1], vs=y, ws = sample_weight)
+        self.f_ = regress_isotonic_2d_l2(xs=X[:, 0], ys=X[:, 1], vs=y, ws=sample_weight)
 
     def predict(self, T):
         """Predict new data by bilinear interpolation.
@@ -384,4 +408,4 @@ class Isotonic2dRegression(RegressorMixin, TransformerMixin):
         """
 
         T = check_array(T)
-        return [self.f_(T[i,0], T[i,1]) for i in range(T.shape[0])]
+        return [self.f_(T[i, 0], T[i, 1]) for i in range(T.shape[0])]

@@ -7,6 +7,7 @@ from isoboost import regress_isotonic_2d
 from isoboost import regress_isotonic_2d_l1
 from isoboost import regress_isotonic_2d_l2
 
+
 class Isotonic2dBase(object):
     """
     Shared test code for 2D isotonic regressions.
@@ -47,6 +48,7 @@ class Isotonic2dBase(object):
         """
         raise NotImplemented()
 
+
 class Isotonic2dLpBase(Isotonic2dBase):
     """
     Shared test cases where the choice of Lp norm does not matter.
@@ -55,25 +57,34 @@ class Isotonic2dLpBase(Isotonic2dBase):
     def test_00_singleton(self):
         expected = 4.0981
 
-        self.check(training_data=[(1.0, 1.0, expected)],
-                   test_data=[(x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)])
+        self.check(
+            training_data=[(1.0, 1.0, expected)],
+            test_data=[
+                (x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)
+            ],
+        )
 
     def test_01_singleton_weighted(self):
         expected = 6.1279
 
-        self.check(training_data=[(1.0, 1.0, expected)],
-                   test_data=[(x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)])
+        self.check(
+            training_data=[(1.0, 1.0, expected)],
+            test_data=[
+                (x, y, expected) for x in (0.5, 1.0, 1.5) for y in (0.5, 1.0, 1.5)
+            ],
+        )
 
     def test_02_isotonic_tiny(self):
         def f(x, y):
             return x + y ** 2
 
-        data = [(x, y, f(x, y)) for (x, y) in
-                [(0.0, 0.0), (0.0, 0.2)]]
+        data = [(x, y, f(x, y)) for (x, y) in [(0.0, 0.0), (0.0, 0.2)]]
         self.check_isotonic(data)
 
     def test_03_isotonic_small(self):
-        self.check_isotonic(((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0)))
+        self.check_isotonic(
+            ((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0))
+        )
 
     def test_04_isotonic_medium(self):
         def f(x, y):
@@ -90,7 +101,16 @@ class Isotonic2dLpBase(Isotonic2dBase):
 
         """
 
-        training_data = [(0.0, 0.1, 0.1), (0.1, 0.0, 0.1), (0.1, 0.1, 0.2), (0.2, 0.0, 0.2), (0.2, 0.1, 0.30000000000000004), (0.3, 0.0, 0.3), (0.3, 0.1, 0.4), (0.4, 0.0, 0.4)]
+        training_data = [
+            (0.0, 0.1, 0.1),
+            (0.1, 0.0, 0.1),
+            (0.1, 0.1, 0.2),
+            (0.2, 0.0, 0.2),
+            (0.2, 0.1, 0.30000000000000004),
+            (0.3, 0.0, 0.3),
+            (0.3, 0.1, 0.4),
+            (0.4, 0.0, 0.4),
+        ]
 
         self.check_isotonic(training_data)
 
@@ -102,6 +122,7 @@ class Isotonic2dLpBase(Isotonic2dBase):
         data_range = [i / n for i in range(n)]
         self.check_isotonic(((x, y, f(x, y)) for x in data_range for y in data_range))
 
+
 class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
     Test L1 support from regress_isotonic_2d_l1.
@@ -109,6 +130,7 @@ class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
 
     def fit(self, training_data):
         return regress_isotonic_2d_l1(*zip(*training_data))
+
 
 class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
     """
@@ -142,18 +164,25 @@ class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
         expected = 0.25
 
         test_range = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
-        self.check(training_data = [(1.0, 1.0, 1.0),
-                                    (1.0, 2.0, 1.0),
-                                    (2.0, 1.0, 1.0),
-                                    (3.0, 3.0, -2.0)],
-                   test_data = [(x, y, expected) for x in test_range for y in test_range])
+        self.check(
+            training_data=[
+                (1.0, 1.0, 1.0),
+                (1.0, 2.0, 1.0),
+                (2.0, 1.0, 1.0),
+                (3.0, 3.0, -2.0),
+            ],
+            test_data=[(x, y, expected) for x in test_range for y in test_range],
+        )
+
 
 class Isotonic2dTestCase(Isotonic2dL2TestCase):
     """
     Test regress_isotonic_2d with the same L2 test cases.
     """
+
     def fit(self, training_data):
         return regress_isotonic_2d(*zip(*training_data))
+
 
 class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
     """
@@ -162,13 +191,14 @@ class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
 
     def fit(self, training_data):
         model = Isotonic2dRegression()
-        model.fit(X=[r[:2] for r in training_data], y = [r[2] for r in training_data])
+        model.fit(X=[r[:2] for r in training_data], y=[r[2] for r in training_data])
 
         return lambda x, y: model.predict([(x, y)])[0]
+
 
 ############################################################
 # startup handling #########################################
 ############################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

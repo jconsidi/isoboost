@@ -4,6 +4,7 @@ import unittest
 
 from isoboost.isotonic2d import _regress_isotonic_2d_l1_binary
 
+
 class Isotonic2dBinaryTestCase(unittest.TestCase):
     """
     Test case for 2D L1 binary problems.
@@ -11,7 +12,7 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
 
     def check(self, training_data, a, b, test_data):
         # validate test answers match the requested answers
-        
+
         for (x0, y0, v0) in test_data:
             self.assertIn(v0, (a, b))
 
@@ -82,7 +83,7 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
         for (a, b) in [(1, 3), (3, 6)]:
             test_data = [(x, y, a if v <= a else b) for (x, y, v, w) in training_data]
             self.check(training_data, a, b, test_data)
-    
+
     def test_10_ambiguous(self):
         """Test an input that was broken while implementing L2.
 
@@ -107,9 +108,10 @@ class Isotonic2dBinaryTestCase(unittest.TestCase):
         self.assertEqual(len(output_values), 1)
         self.assertIn(min(output_values), (a, b))
 
+
 ############################################################
 # startup handling #########################################
 ############################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

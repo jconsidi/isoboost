@@ -4,6 +4,7 @@ import unittest
 
 from isoboost import IsotonicKdRegression
 
+
 class IsotonicKdRegressionTest(unittest.TestCase):
     """
     Test code for kD isotonic regressions.
@@ -29,19 +30,24 @@ class IsotonicKdRegressionTest(unittest.TestCase):
     def test_00_singleton(self):
         expected = 4.0981
 
-        self.check(training_data=[(1.0, expected)],
-                   test_data=[(0.0, expected), (1.0, expected), (2.0, expected)])
+        self.check(
+            training_data=[(1.0, expected)],
+            test_data=[(0.0, expected), (1.0, expected), (2.0, expected)],
+        )
 
-        self.check(training_data=[(1.0, 1.0, 1.0, 1.0, expected)],
-                   test_data = [(0.0, 0.0, 0.0, 0.0, expected),
-                                (1.0, 1.0, 1.0, 1.0, expected),
-                                (0.0, 2.0, 0.0, 2.0, expected)])
+        self.check(
+            training_data=[(1.0, 1.0, 1.0, 1.0, expected)],
+            test_data=[
+                (0.0, 0.0, 0.0, 0.0, expected),
+                (1.0, 1.0, 1.0, 1.0, expected),
+                (0.0, 2.0, 0.0, 2.0, expected),
+            ],
+        )
 
     def test_03_isotonic_small(self):
-        self.check_isotonic(((1.0, 1.0, 1.0),
-                             (1.0, 2.0, 3.0),
-                             (2.0, 1.0, 3.0),
-                             (3.0, 3.0, 6.0)))
+        self.check_isotonic(
+            ((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0))
+        )
 
     def test_04_isotonic_medium(self):
         def f(x, y):
@@ -52,21 +58,36 @@ class IsotonicKdRegressionTest(unittest.TestCase):
 
     def test_05_isotonic_big(self):
         def f(x, y, z):
-            return x + y + z # x + y ** 2 + z ** 3
+            return x + y + z  # x + y ** 2 + z ** 3
 
         data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-        self.check_isotonic([(x, y, z, f(x, y, z)) for x in data_range for y in data_range for z in data_range])
+        self.check_isotonic(
+            [
+                (x, y, z, f(x, y, z))
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ]
+        )
 
     def test_06_isotonic_big(self):
         def f(x, y, z):
             return x + y ** 2 + z ** 3
 
         data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-        self.check_isotonic([(x, y, z, f(x, y, z)) for x in data_range for y in data_range for z in data_range])
+        self.check_isotonic(
+            [
+                (x, y, z, f(x, y, z))
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ]
+        )
+
 
 ############################################################
 # startup handling #########################################
 ############################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

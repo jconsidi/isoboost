@@ -4,31 +4,32 @@ import unittest
 
 from isoboost import regress_isotonic_1d
 
+
 class Isotonic1dTestCase(unittest.TestCase):
     def check_generic(self, inputs, output):
         # copy inputs and append regressed values
         regressed = []
         for input in inputs:
             (x, v) = input[:2]
-            w = input[2] if len(input) > 2 else 1.0 # add weight if not specified
-            r = output(x) # add regressed value
+            w = input[2] if len(input) > 2 else 1.0  # add weight if not specified
+            r = output(x)  # add regressed value
             regressed.append((x, v, w, r))
 
         regressed.sort()
         for i in range(len(regressed) - 1):
             (x0, v0, w0, r0) = regressed[i]
             (x1, v1, w1, r1) = regressed[i + 1]
-            with self.subTest(x0 = x0, x1 = x1):
+            with self.subTest(x0=x0, x1=x1):
                 self.assertLessEqual(r0, r1)
 
         level_sets = {}
         for (x0, v0, w0, r0) in regressed:
             level_sets.setdefault(r0, [0.0, 0.0])
-            level_sets[r0][0] += v0 * w0 # sum(value * weight)
-            level_sets[r0][1] += w0 # sum(weight)
+            level_sets[r0][0] += v0 * w0  # sum(value * weight)
+            level_sets[r0][1] += w0  # sum(weight)
 
         for r in level_sets.keys():
-            with self.subTest(r = r):
+            with self.subTest(r=r):
                 # check level sets match their weighted average.
                 self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
 
@@ -85,9 +86,10 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         self.check_generic(inputs, output)
 
+
 ############################################################
 # startup handling #########################################
 ############################################################
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
