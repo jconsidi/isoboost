@@ -13,7 +13,7 @@ class Isotonic2dBase(object):
     Shared test code for 2D isotonic regressions.
     """
 
-    def check(self, training_data, test_data):
+    def check(self, training_data, test_data, *, n_values=None):
         # validate isotonicity of test data
 
         if len(test_data) <= 100:
@@ -27,7 +27,7 @@ class Isotonic2dBase(object):
 
         # train prediction function
 
-        predict_func = self.fit(training_data)
+        predict_func = self.fit(training_data, n_values=n_values)
 
         # TODO: check level sets for training data
 
@@ -43,7 +43,7 @@ class Isotonic2dBase(object):
         test_data = tuple(r[:3] for r in training_data)
         self.check(training_data, test_data)
 
-    def fit(self, training_data):
+    def fit(self, training_data, *, n_values=None):
         """Build model for training data and return function to predict a single point.
         """
         raise NotImplemented()
@@ -128,7 +128,7 @@ class Isotonic2dL1TestCase(Isotonic2dLpBase, unittest.TestCase):
     Test L1 support from regress_isotonic_2d_l1.
     """
 
-    def fit(self, training_data):
+    def fit(self, training_data, *, n_values=None):
         return regress_isotonic_2d_l1(*zip(*training_data))
 
 
@@ -157,8 +157,8 @@ class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
     #             # check level sets match their weighted average.
     #             self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
 
-    def fit(self, training_data):
-        return regress_isotonic_2d_l2(*zip(*training_data))
+    def fit(self, training_data, *, n_values=None):
+        return regress_isotonic_2d_l2(*zip(*training_data), n_values=n_values)
 
     def test_10_unsorted(self):
         expected = 0.25
@@ -174,14 +174,45 @@ class Isotonic2dL2TestCase(Isotonic2dLpBase, unittest.TestCase):
             test_data=[(x, y, expected) for x in test_range for y in test_range],
         )
 
+    def test_20_reduced(self):
+        low = 2.0 / 3.0
+        high = 2.0 + 4.0 / 7.0
+        self.check(
+            training_data=[
+                (0.0, 0.0, 0.0),
+                (0.0, 1.0, 1.0),
+                (0.0, 2.0, 2.0),
+                (0.0, 3.0, 3.0),
+                (1.0, 0.0, 1.0),
+                (1.0, 1.0, 2.0),
+                (1.0, 2.0, 3.0),
+                (2.0, 0.0, 2.0),
+                (2.0, 1.0, 3.0),
+                (3.0, 0.0, 3.0),
+            ],
+            test_data=[
+                (0.0, 0.0, low),
+                (0.0, 1.0, low),
+                (0.0, 2.0, high),
+                (0.0, 3.0, high),
+                (1.0, 0.0, low),
+                (1.0, 1.0, high),
+                (1.0, 2.0, high),
+                (2.0, 0.0, high),
+                (2.0, 1.0, high),
+                (3.0, 3.0, high),
+            ],
+            n_values=2,
+        )
+
 
 class Isotonic2dTestCase(Isotonic2dL2TestCase):
     """
     Test regress_isotonic_2d with the same L2 test cases.
     """
 
-    def fit(self, training_data):
-        return regress_isotonic_2d(*zip(*training_data))
+    def fit(self, training_data, *, n_values=None):
+        return regress_isotonic_2d(*zip(*training_data), n_values=n_values)
 
 
 class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
@@ -189,8 +220,8 @@ class Isotonic2dRegressionTestCase(Isotonic2dTestCase):
     Test Isotonic2dRegression.
     """
 
-    def fit(self, training_data):
-        model = Isotonic2dRegression()
+    def fit(self, training_data, *, n_values=None):
+        model = Isotonic2dRegression(n_values=n_values)
         model.fit(X=[r[:2] for r in training_data], y=[r[2] for r in training_data])
 
         return lambda x, y: model.predict([(x, y)])[0]

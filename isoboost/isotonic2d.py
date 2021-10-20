@@ -16,6 +16,7 @@ from sklearn.utils import check_array
 
 from . import rangemap
 from .piecewise import PiecewiseBilinear
+from .isotonicreduce import reduce_isotonic_l2
 
 
 def _build_output_function(regressed):
@@ -194,11 +195,13 @@ def _regress_isotonic_2d_l1_binary(inputs, a, b):
     return regressed
 
 
-def regress_isotonic_2d(xs, ys, vs, ws=None, p=2):
+def regress_isotonic_2d(xs, ys, vs, ws=None, *, n_values=None, p=2):
     if p == 1:
+        if n_values is not None:
+            raise NotImplementedError("n_values is not implemented for p=1")
         return regress_isotonic_2d_l1(xs=xs, ys=ys, vs=vs, ws=ws)
     if p == 2:
-        return regress_isotonic_2d_l2(xs=xs, ys=ys, vs=vs, ws=ws)
+        return regress_isotonic_2d_l2(xs=xs, ys=ys, vs=vs, ws=ws, n_values=n_values)
 
     raise ValueError("only L1 and L2 norms supported")
 
@@ -279,7 +282,7 @@ def regress_isotonic_2d_l1(xs, ys, vs, ws=None):
     return _build_output_function(regressed)
 
 
-def regress_isotonic_2d_l2(xs, ys, vs, ws=None):
+def regress_isotonic_2d_l2(xs, ys, vs, ws=None, *, n_values=None):
     # xs/ys/vs/ws = iterators of values for respective parameters below.
     # x,y = independent variables
     # v = dependent variable
@@ -373,6 +376,11 @@ def regress_isotonic_2d_l2(xs, ys, vs, ws=None):
 
     partition(list(inputs))
 
+    if n_values is not None:
+        (vs, ws) = zip(*((regressed[(x, y)], w) for (x, y, v, w) in inputs))
+        reduced = reduce_isotonic_l2(vs, ws, n_values)
+        regressed = {(x, y): reduced[v] for ((x, y), v) in regressed.items()}
+
     return _build_output_function(regressed)
 
 
@@ -383,14 +391,17 @@ class Isotonic2dRegression(RegressorMixin, TransformerMixin):
     https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/isotonic.py
     """
 
-    def __init__(self):
+    def __init__(self, n_values=None):
         self.f_ = None
+        self.n_values = n_values
 
     def fit(self, X, y, sample_weight=None):
         # TODO: shape checks
         X = check_array(X)
         y = check_array(y, ensure_2d=False)
-        self.f_ = regress_isotonic_2d_l2(xs=X[:, 0], ys=X[:, 1], vs=y, ws=sample_weight)
+        self.f_ = regress_isotonic_2d_l2(
+            xs=X[:, 0], ys=X[:, 1], vs=y, ws=sample_weight, n_values=self.n_values
+        )
 
     def predict(self, T):
         """Predict new data by bilinear interpolation.

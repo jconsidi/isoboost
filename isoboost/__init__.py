@@ -7,3 +7,4 @@ from .isotonic2d import regress_isotonic_2d_l1
 from .isotonic2d import regress_isotonic_2d_l2
 from .isotonicboost import IsotonicBoostRegressor
 from .isotonickd import IsotonicKdRegression
+from .isotonicreduce import reduce_isotonic
