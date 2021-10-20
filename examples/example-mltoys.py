@@ -11,6 +11,7 @@ from isoboost import IsotonicBoostRegressor
 
 # SklearnBase copied from https://github.com/jconsidi/mltoys/blob/master/examples/base.py
 
+
 class SklearnBase(mltoys.types.MLToyBase):
     def __init__(self, columns, feature_columns, target_columns, loss_function):
         super().__init__(
@@ -47,6 +48,7 @@ class SklearnBase(mltoys.types.MLToyBase):
 
         for i in range(len(test_data)):
             yield (test_data[i][0],) + tuple(test_predictions[i, :].tolist())
+
 
 class IsoboostLinearModel(SklearnBase):
     def __init__(self, columns, feature_columns, target_columns, loss_function):
