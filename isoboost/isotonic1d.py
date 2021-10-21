@@ -2,21 +2,7 @@
 
 import itertools
 
-
-def _isotonic_helper(x, xs):
-    # finds index to use looking up values in isotonic models.
-
-    i_min = 0
-    i_max = len(xs) - 1
-
-    while i_min < i_max:
-        i_mid = (i_min + i_max + 1) // 2
-        if xs[i_mid] <= x:
-            i_min = i_mid
-        else:
-            i_max = i_mid - 1
-
-    return i_min
+from .piecewise import PiecewiseLinear
 
 
 def regress_isotonic_1d(xs, vs, ws=None):
@@ -36,6 +22,7 @@ def regress_isotonic_1d(xs, vs, ws=None):
     # run Principal Adjacent Violators Algorithm
 
     bucket_starts = []
+    bucket_ends = []
     bucket_sums = []
     bucket_values = []
     bucket_weights = []
@@ -47,6 +34,7 @@ def regress_isotonic_1d(xs, vs, ws=None):
 
         # add new data point as a new bucket
         bucket_starts.append(x)
+        bucket_ends.append(x)
         bucket_sums.append(v * w)
         bucket_values.append(v)
         bucket_weights.append(w)
@@ -59,12 +47,18 @@ def regress_isotonic_1d(xs, vs, ws=None):
             if bucket_weights[-2] > 0:
                 bucket_values[-2] = bucket_sums[-2] / bucket_weights[-2]
 
+            bucket_ends[-2] = bucket_ends[-1]
+
             bucket_starts.pop()
+            bucket_ends.pop()
             bucket_sums.pop()
             bucket_values.pop()
             bucket_weights.pop()
 
-    def m(x):
-        return bucket_values[_isotonic_helper(x, bucket_starts)]
+    points = []
+    for i in range(len(bucket_starts)):
+        points.append((bucket_starts[i], bucket_values[i]))
+        if bucket_ends[i] != bucket_starts[i]:
+            points.append((bucket_ends[i], bucket_values[i]))
 
-    return m
+    return PiecewiseLinear(points).interpolate

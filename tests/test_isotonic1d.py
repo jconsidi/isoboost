@@ -76,11 +76,11 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         self.assertEqual(output(0.5), 1.1)
         self.assertEqual(output(1.0), 1.1)
-        self.assertEqual(output(1.5), 1.1)
+        self.assertEqual(output(1.5), 1.15)
         self.assertEqual(output(2.0), 1.2)
-        self.assertEqual(output(2.5), 1.2)
+        self.assertEqual(output(2.5), 1.25)
         self.assertEqual(output(3.0), 1.3)
-        self.assertEqual(output(3.5), 1.3)
+        self.assertEqual(output(3.5), 1.35)
         self.assertEqual(output(4.0), 1.4)
         self.assertEqual(output(4.5), 1.4)
 
