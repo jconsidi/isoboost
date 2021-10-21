@@ -2,10 +2,11 @@
 
 import itertools
 
+from .isotonicreduce import reduce_isotonic_l2
 from .piecewise import PiecewiseLinear
 
 
-def regress_isotonic_1d(xs, vs, ws=None):
+def regress_isotonic_1d(xs, vs, ws=None, *, n_values=None):
     # xs/vs/ws = iterators of values for respective parameters below.
     # x = independent variable
     # v = dependent variable
@@ -54,6 +55,10 @@ def regress_isotonic_1d(xs, vs, ws=None):
             bucket_sums.pop()
             bucket_values.pop()
             bucket_weights.pop()
+
+    if n_values:
+        reduced = reduce_isotonic_l2(bucket_values, bucket_weights, n_values)
+        bucket_values = [reduced[v] for v in bucket_values]
 
     points = []
     for i in range(len(bucket_starts)):

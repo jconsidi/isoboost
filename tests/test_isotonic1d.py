@@ -33,7 +33,7 @@ class Isotonic1dTestCase(unittest.TestCase):
                 # check level sets match their weighted average.
                 self.assertAlmostEqual(r, level_sets[r][0] / level_sets[r][1])
 
-    def test_singleton(self):
+    def test_00_singleton(self):
         expected = 3.2349
 
         inputs = []
@@ -48,7 +48,7 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         self.check_generic(inputs, output)
 
-    def test_singleton_weighted(self):
+    def test_01_singleton_weighted(self):
         expected = 5.7268
 
         inputs = []
@@ -63,7 +63,7 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         self.check_generic(inputs, output)
 
-    def test_sorted(self):
+    def test_10_sorted(self):
         inputs = []
         inputs.append((1.0, 1.1))
         inputs.append((2.0, 1.2))
@@ -83,6 +83,52 @@ class Isotonic1dTestCase(unittest.TestCase):
         self.assertEqual(output(3.5), 1.35)
         self.assertEqual(output(4.0), 1.4)
         self.assertEqual(output(4.5), 1.4)
+
+        self.check_generic(inputs, output)
+
+    def test_20_reduced_one(self):
+        inputs = []
+        inputs.append((1.0, 1.1))
+        inputs.append((2.0, 1.2))
+        inputs.append((3.0, 1.3))
+        inputs.append((4.0, 1.4))
+
+        (xs, vs) = zip(*inputs)
+
+        output = regress_isotonic_1d(xs, vs, n_values=1)
+
+        self.assertEqual(output(0.5), 1.25)
+        self.assertEqual(output(1.0), 1.25)
+        self.assertEqual(output(1.5), 1.25)
+        self.assertEqual(output(2.0), 1.25)
+        self.assertEqual(output(2.5), 1.25)
+        self.assertEqual(output(3.0), 1.25)
+        self.assertEqual(output(3.5), 1.25)
+        self.assertEqual(output(4.0), 1.25)
+        self.assertEqual(output(4.5), 1.25)
+
+        self.check_generic(inputs, output)
+
+    def test_21_reduced_two(self):
+        inputs = []
+        inputs.append((1.0, 1.1))
+        inputs.append((2.0, 1.2))
+        inputs.append((3.0, 1.3))
+        inputs.append((4.0, 1.4))
+
+        (xs, vs) = zip(*inputs)
+
+        output = regress_isotonic_1d(xs, vs, n_values=2)
+
+        self.assertEqual(output(0.5), 1.15)
+        self.assertEqual(output(1.0), 1.15)
+        self.assertEqual(output(1.5), 1.15)
+        self.assertEqual(output(2.0), 1.15)
+        self.assertEqual(output(2.5), 1.25)
+        self.assertEqual(output(3.0), 1.35)
+        self.assertEqual(output(3.5), 1.35)
+        self.assertEqual(output(4.0), 1.35)
+        self.assertEqual(output(4.5), 1.35)
 
         self.check_generic(inputs, output)
 
