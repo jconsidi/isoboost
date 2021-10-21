@@ -10,10 +10,10 @@ class IsotonicKdRegressionTest(unittest.TestCase):
     Test code for kD isotonic regressions.
     """
 
-    def check(self, training_data, test_data):
+    def check(self, training_data, test_data, *, n_values=None):
         # train model
 
-        regressor = IsotonicKdRegression()
+        regressor = IsotonicKdRegression(n_values=n_values)
         regressor.fit([r[:-1] for r in training_data], [r[-1] for r in training_data])
 
         for test_row in test_data:
@@ -82,6 +82,48 @@ class IsotonicKdRegressionTest(unittest.TestCase):
                 for y in data_range
                 for z in data_range
             ]
+        )
+
+    def test_11_n_values_nop(self):
+        def f(x, y, z):
+            return x + y + z
+
+        data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+        self.check(
+            training_data=[
+                (x, y, z, f(x, y, z))
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ],
+            test_data=[
+                (x, y, z, f(x, y, z))
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ],
+            n_values=100000,
+        )
+
+    def test_11_n_values_real(self):
+        def f(x, y, z):
+            return x + y + z
+
+        data_range = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+        self.check(
+            training_data=[
+                (x, y, z, f(x, y, z))
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ],
+            test_data=[
+                (x, y, z, 1.5)
+                for x in data_range
+                for y in data_range
+                for z in data_range
+            ],
+            n_values=1,
         )
 
 

@@ -1,6 +1,7 @@
 # isotonickd.py
 
 import logging
+import numpy
 
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
@@ -9,6 +10,8 @@ from sklearn.metrics import r2_score
 
 from .isotonic1d import regress_isotonic_1d
 from .isotonic2d import regress_isotonic_2d
+from .isotonicreduce import reduce_isotonic_l2
+from .piecewise import PiecewiseLinear
 
 
 class IsotonicKdRegression(RegressorMixin, TransformerMixin):
@@ -20,10 +23,12 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
     https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/isotonic.py
     """
 
-    def __init__(self, n_estimators=None):
+    def __init__(self, n_estimators=None, n_values=None):
         self.fs = None
+        self.rs = None
         self.k = None
         self.n_estimators = n_estimators
+        self.n_values = n_values
 
     def fit(self, X, y, sample_weight=None):
         # TODO: shape checks
@@ -36,14 +41,46 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
         if self.k == 0:
             raise ValueError("cannot fit 0D data")
         elif self.k == 1:
-            self.fs.append(regress_isotonic_1d(xs=X[:, 0], vs=y, ws=sample_weight))
+            self.fs.append(
+                regress_isotonic_1d(
+                    xs=X[:, 0], vs=y, ws=sample_weight, n_values=self.n_values
+                )
+            )
         else:
             if not self.n_estimators:
                 self.n_estimators = self.k * 2 - 1 if self.k > 2 else 1
 
+            if self.n_values:
+                X_original = X
+                X = X.copy()
+                self.rs = [None for _ in range(self.k)]
+                for i in range(self.k):
+                    if len(set(X[:, i])) > self.n_values:
+                        reduced = reduce_isotonic_l2(
+                            X[:, i],
+                            sample_weight
+                            if sample_weight
+                            else [1 for _ in range(X.shape[0])],
+                            self.n_values,
+                        )
+                        self.rs[i] = numpy.vectorize(
+                            PiecewiseLinear(reduced.items()).interpolate
+                        )
+                        X[:, i] = self.rs[i](X[:, i])
+
+                if all(f is None for f in self.rs):
+                    # forget about reducing if none of the inputs were reduced
+                    self.rs = None
+                    del X
+                    X = X_original
+
             self.fs.append(
                 regress_isotonic_2d(
-                    xs=X[:, 0], ys=X[:, 1], vs=list(y), ws=sample_weight
+                    xs=X[:, 0],
+                    ys=X[:, 1],
+                    vs=list(y),
+                    ws=sample_weight,
+                    n_values=self.n_values,
                 )
             )
             if len(y) <= 1:
@@ -64,7 +101,11 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
                 current_input = X[:, (i + 1) % self.k]
                 self.fs.append(
                     regress_isotonic_2d(
-                        xs=previous_prediction, ys=current_input, vs=y, ws=sample_weight
+                        xs=previous_prediction,
+                        ys=current_input,
+                        vs=y,
+                        ws=sample_weight,
+                        n_values=self.n_values,
                     )
                 )
 
@@ -131,6 +172,12 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
 
         if self.k == 1:
             return [self.fs[0](x) for x in T]
+
+        if self.rs:
+            T = T.copy()
+            for (i, f) in enumerate(self.rs):
+                if f:
+                    T[:, i] = f(T[:, i])
 
         prediction = [self.fs[0](x, y) for (x, y) in zip(T[:, 0], T[:, 1])]
 
