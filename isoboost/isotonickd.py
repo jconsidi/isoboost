@@ -2,6 +2,7 @@
 
 import logging
 
+from numpy import asarray
 from numpy import vectorize
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
@@ -186,4 +187,4 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
             current_input = T[:, (i + 1) % self.k]
             prediction = [f(x, y) for (x, y) in zip(prediction, current_input)]
 
-        return prediction
+        return asarray(prediction)

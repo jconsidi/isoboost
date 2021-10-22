@@ -10,6 +10,7 @@ import itertools
 import math
 import statistics
 
+from numpy import asarray
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.utils import check_array
@@ -433,4 +434,4 @@ class Isotonic2dRegression(RegressorMixin, TransformerMixin):
         """
 
         T = check_array(T)
-        return [self.f_(T[i, 0], T[i, 1]) for i in range(T.shape[0])]
+        return asarray([self.f_(T[i, 0], T[i, 1]) for i in range(T.shape[0])])
