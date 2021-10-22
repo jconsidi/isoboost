@@ -1,8 +1,8 @@
 # isotonickd.py
 
 import logging
-import numpy
 
+from numpy import vectorize
 from sklearn.base import RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.base import check_array
@@ -63,7 +63,7 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
                             else [1 for _ in range(X.shape[0])],
                             self.n_values,
                         )
-                        self.rs[i] = numpy.vectorize(
+                        self.rs[i] = vectorize(
                             PiecewiseLinear(reduced.items()).interpolate
                         )
                         X[:, i] = self.rs[i](X[:, i])
