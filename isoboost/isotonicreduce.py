@@ -34,15 +34,27 @@ def reduce_isotonic_l2(vs, ws, n_values):
     vws = sorted(value_weights.items())
     (vs, ws) = zip(*vws)
 
+    def setup_range_sum(f):
+        cumulative_sums = [0.0]
+        for (v, w) in vws:
+            cumulative_sums.append(cumulative_sums[-1] + f(v, w))
+
+        return lambda i, j: cumulative_sums[j] - cumulative_sums[i]
+
+    range_weight = setup_range_sum(lambda v, w: w)
+    range_value_weight = setup_range_sum(lambda v, w: v * w)
+    range_value2_weight = setup_range_sum(lambda v, w: v * v * w)
+
     def calculate_range_mean(i, j):
-        return sum(v * w for (v, w) in vws[i:j]) / sum(ws[i:j])
+        return range_value_weight(i, j) / range_weight(i, j)
 
     def calculate_range_error(i, j):
         if j <= i:
             return 0.0
 
+        v2_mean = range_value2_weight(i, j) / range_weight(i, j)
         v_mean = calculate_range_mean(i, j)
-        return sum((v - v_mean) ** 2 * w for (v, w) in vws[i:j]) / sum(ws[i:j])
+        return v2_mean - v_mean * v_mean
 
     errs = []
     errs.append([calculate_range_error(i, m) for i in range(m)])
