@@ -20,7 +20,7 @@ RUN pip3 install --upgrade pip
 
 # custom start
 
-ENV HOME /jc/numerai-model
+ENV HOME /isoboost
 WORKDIR $HOME
 
 ADD requirements.txt $HOME
@@ -32,7 +32,6 @@ ADD setup.py $HOME
 RUN python3 setup.py install
 
 ADD examples/*.py examples/
-ADD scripts/*.py scripts/*.sh scripts/
 ADD tests/*.py tests/*.sh tests/
 
 RUN python3 -m compileall scripts/*.py
