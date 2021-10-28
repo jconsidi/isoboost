@@ -63,6 +63,19 @@ class Isotonic1dTestCase(unittest.TestCase):
 
         self.check_generic(inputs, output)
 
+    def test_02_duplicate(self):
+        expected = 1.123
+
+        inputs = []
+        inputs.append((1.0, expected))
+        inputs.append((1.0, expected))
+
+        output = regress_isotonic_1d(*(zip(*inputs)))
+
+        self.assertEqual(output(0.5), expected)
+        self.assertEqual(output(1.0), expected)
+        self.assertEqual(output(1.5), expected)
+
     def test_10_sorted(self):
         inputs = []
         inputs.append((1.0, 1.1))

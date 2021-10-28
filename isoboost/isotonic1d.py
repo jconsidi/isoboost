@@ -62,7 +62,8 @@ def regress_isotonic_1d(xs, vs, ws=None, *, n_values=None):
 
     points = []
     for i in range(len(bucket_starts)):
-        points.append((bucket_starts[i], bucket_values[i]))
+        if i <= 0 or bucket_starts[i] > points[-1][0]:
+            points.append((bucket_starts[i], bucket_values[i]))
         if bucket_ends[i] != bucket_starts[i]:
             points.append((bucket_ends[i], bucket_values[i]))
 
