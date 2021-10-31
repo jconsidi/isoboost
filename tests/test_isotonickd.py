@@ -44,6 +44,19 @@ class IsotonicKdRegressionTest(unittest.TestCase):
             ],
         )
 
+    def test_01_repeated_coordinate(self):
+        expected = 2.125
+        self.check(
+            training_data=[(0.5, expected - 1.0), (0.5, expected + 1.0)],
+            test_data=[
+                (0.0, expected),
+                (1.0, expected),
+                (2.0, expected),
+                (3.0, expected),
+                (4.0, expected),
+            ],
+        )
+
     def test_03_isotonic_small(self):
         self.check_isotonic(
             ((1.0, 1.0, 1.0), (1.0, 2.0, 3.0), (2.0, 1.0, 3.0), (3.0, 3.0, 6.0))

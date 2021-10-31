@@ -40,9 +40,12 @@ def regress_isotonic_1d(xs, vs, ws=None, *, n_values=None):
         bucket_values.append(v)
         bucket_weights.append(w)
 
-        # merge buckets as long as isotonicity is violated.
+        # merge buckets as long as independent variable is repeated or isotonicity is violated.
 
-        while len(bucket_values) > 1 and bucket_values[-2] > bucket_values[-1]:
+        while len(bucket_values) > 1 and (
+            bucket_ends[-2] >= bucket_starts[-1]
+            or bucket_values[-2] > bucket_values[-1]
+        ):
             bucket_sums[-2] += bucket_sums[-1]
             bucket_weights[-2] += bucket_weights[-1]
             if bucket_weights[-2] > 0:
