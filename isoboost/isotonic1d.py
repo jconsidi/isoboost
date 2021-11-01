@@ -20,6 +20,29 @@ def regress_isotonic_1d(xs, vs, ws=None, *, n_values=None):
     inputs = zip(xs, vs, ws)
     inputs = list(inputs)
 
+    # sort and merge repeated independent variables.
+    # also converting to (x, sum(v*w), sum(w)) representation
+
+    inputs.sort()
+
+    inputs[0] = [inputs[0][0], inputs[0][1] * inputs[0][2], inputs[0][2]]
+    distinct_xs = 1
+    for i in range(1, len(inputs)):
+        if inputs[i][0] > inputs[distinct_xs - 1][0]:
+            # new x value
+            inputs[distinct_xs] = [
+                inputs[i][0],
+                inputs[i][1] * inputs[i][2],
+                inputs[i][2],
+            ]
+            distinct_xs += 1
+        else:
+            # duplicate x value
+            inputs[distinct_xs - 1][1] += inputs[i][1] * inputs[i][2]
+            inputs[distinct_xs - 1][2] += inputs[i][2]
+
+    inputs[distinct_xs:] = []
+
     # run Principal Adjacent Violators Algorithm
 
     bucket_starts = []
@@ -29,18 +52,18 @@ def regress_isotonic_1d(xs, vs, ws=None, *, n_values=None):
     bucket_weights = []
 
     inputs.sort()
-    for (x, v, w) in inputs:
+    for (x, vw, w) in inputs:
         if w == 0.0:
             continue
 
         # add new data point as a new bucket
         bucket_starts.append(x)
         bucket_ends.append(x)
-        bucket_sums.append(v * w)
-        bucket_values.append(v)
+        bucket_sums.append(vw)
+        bucket_values.append(vw / w)
         bucket_weights.append(w)
 
-        # merge buckets as long as independent variable is repeated or isotonicity is violated.
+        # merge buckets as long as isotonicity is violated.
 
         while len(bucket_values) > 1 and (
             bucket_ends[-2] >= bucket_starts[-1]

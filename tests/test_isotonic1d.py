@@ -76,6 +76,17 @@ class Isotonic1dTestCase(unittest.TestCase):
         self.assertEqual(output(1.0), expected)
         self.assertEqual(output(1.5), expected)
 
+    def test_03_duplicate_avoid_bad_merge(self):
+        inputs = []
+        inputs.append((0.0, 0.0))
+        inputs.append((1.0, -1.0))
+        inputs.append((1.0, 3.0))
+
+        output = regress_isotonic_1d(*zip(*inputs))
+
+        self.assertEqual(output(0.0), 0.0)
+        self.assertEqual(output(1.0), 1.0)
+
     def test_10_sorted(self):
         inputs = []
         inputs.append((1.0, 1.1))
