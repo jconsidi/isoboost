@@ -172,6 +172,7 @@ class IsotonicKdRegression(RegressorMixin, TransformerMixin):
             raise ValueError("wrong shape")
 
         if self.k == 1:
+            T = T.reshape((-1,))
             return asarray([self.fs[0](x) for x in T])
 
         if self.rs:
