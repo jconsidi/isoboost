@@ -1,4 +1,4 @@
 black==19.10b0
-git+git://github.com/jconsidi/mltoys.git@master
+git+https://github.com/jconsidi/mltoys.git@master
 pandas
 scikit-learn
